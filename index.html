@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>🛒 Lista de Compras</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>🛒 Lista de Compras</h1>
+
+      <!-- Botón + menú desplegable de categorías -->
+      <div class="filter-bar">
+        <button id="filterBtn" class="filter-btn">Todos ▾</button>
+        <div id="filterMenu" class="menu" hidden>
+          <button class="menu-item" data-cat="Todos">Todos</button>
+          <button class="menu-item" data-cat="Frutas">🍎 Frutas</button>
+          <button class="menu-item" data-cat="Verduras">🥕 Verduras</button>
+          <button class="menu-item" data-cat="Lácteos">🥛 Lácteos</button>
+          <button class="menu-item" data-cat="Limpieza">🧽 Limpieza</button>
+          <button class="menu-item" data-cat="Otros">🧺 Otros</button>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <form id="itemForm">
+        <input id="itemName" type="text" placeholder="Producto (ej. Manzanas)" autocomplete="off" />
+        <select id="itemCategory">
+          <option value="Frutas">Frutas</option>
+          <option value="Verduras">Verduras</option>
+          <option value="Lácteos">Lácteos</option>
+          <option value="Limpieza">Limpieza</option>
+          <option value="Otros" selected>Otros</option>
+        </select>
+        <button class="btn" type="submit">Agregar</button>
+      </form>
+
+      <p id="status" class="estado">Mostrando: Todos (0)</p>
+
+      <!-- Lista -->
+      <ul id="list" class="lista"></ul>
+      <div id="empty" class="vacio" hidden>No hay ítems para mostrar</div>
+    </div>
+  </div>
+
+  <script src="main.js" defer></script>
+</body>
+</html>
