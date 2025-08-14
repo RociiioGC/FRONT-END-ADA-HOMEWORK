@@ -67,7 +67,7 @@ h1{
   cursor:pointer;
   font-weight: 600;
   font-size: 14px;
-  transition: .2s;
+  transition: background-color .2s, transform .06s;
 }
 
 .filter-btn:hover{
@@ -142,8 +142,7 @@ input[type="text"]:focus,select:focus{
   cursor:pointer;
   background:var(--primary);
   color:#fff;
-  transition:transform .06s;
-  background: .2s;
+  transition:transform .06s,background-color .2s;
 }
 
 .btn:hover{
@@ -167,6 +166,16 @@ ul.lista{
   display:grid;
   gap:10px;
   margin-top:8px
+}
+
+ul.lista .vacio{
+  list-style: none;
+  text-align: center;
+  color: var(--muted);
+  padding: 14px;
+  border: 1px dashed #e5e1f5;
+  border-radius: 12px;
+  background: #fff;
 }
 
 .item{
@@ -215,20 +224,11 @@ ul.lista{
   transform: translateY(1px);
 }
 
-.vacio{
-  padding:18px;
-  border:1px dashed #ddd;
-  border-radius:12px;
-  text-align:center;
-  color:var(--muted);
-  background:#fcfcfc
-}
-
-/* Responsive */
+/* Responsive 
 @media (max-width:640px){
   form{grid-template-columns:1fr 1fr}
   form .btn{grid-column:1 / -1}
   .item{grid-template-columns:1fr auto}
   .item .badge{order:2}
   .item .delete{order:3;justify-self:end}
-}
+}*/

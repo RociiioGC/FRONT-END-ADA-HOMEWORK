@@ -1,103 +1,142 @@
-const $ = (sel) => document.querySelector(sel);
+const $ = (selector) => document.querySelector(selector);
 
-// Estado
-const items = []; // { id, nombre, categoria }
-let filtroActual = 'Todos';
+// ===== Estado =====
+let productos = [];
 
-// Elementos
-const form    = $('#itemForm');
-const nombre  = $('#itemName');
-const cat     = $('#itemCategory');
-const lista   = $('#list');
-const estado  = $('#status');
-const vacio   = $('#empty');
+// ===== Elementos del DOM (IDs) =====
+const formulario      = $("#itemForm");
+const nombreInput     = $("#itemName");
+const categoriaSelect = $("#itemCategory");
+const listaContainer  = $("#list");      // <ul>
+const estado          = $("#status");    // contador
 
-const filterBtn  = $('#filterBtn');
-const filterMenu = $('#filterMenu');
+const filterBtn  = $("#filterBtn");      // botón "Todos ▾" 
+const filterMenu = $("#filterMenu");     // menú con .menu-item 
 
-// Inicio
-document.addEventListener('DOMContentLoaded', () => {
-  form.addEventListener('submit', agregarItem);
-  lista.addEventListener('click', onListaClick);
+// ===== Inicio =====
+document.addEventListener("DOMContentLoaded", function () {
+  formulario.addEventListener("submit", agregarProducto);
+  obtenerProductos();
+  mostrarProductos();
 
-  // Abrir/cerrar menú
-  filterBtn.addEventListener('click', () => {
-    if (filterMenu.hasAttribute('hidden')) filterMenu.removeAttribute('hidden');
-    else filterMenu.setAttribute('hidden', '');
-  });
+  // sincronizar el label con la URL:
+  const params = new URLSearchParams(window.location.search);
+  const catURL = params.get("categoria");
+  if (filterBtn) filterBtn.textContent = (catURL || "Todos") + " ▾";
 
-  // Elegir categoría desde el menú
-  filterMenu.addEventListener('click', (e) => {
-    const item = e.target.closest('.menu-item');
-    if (!item) return;
-    setFiltro(item.dataset.cat);
-    filterBtn.textContent = item.textContent + ' ▾';
-    filterMenu.setAttribute('hidden', '');
-  });
+  // menú de categorías 
+  if (filterBtn && filterMenu) {
+    // abrir/cerrar
+    filterBtn.addEventListener("click", () => {
+      if (filterMenu.hasAttribute("hidden")) filterMenu.removeAttribute("hidden");
+      else filterMenu.setAttribute("hidden", "");
+    });
 
-  // Cerrar al hacer click fuera
-  document.addEventListener('click', (e) => {
-    if (!filterMenu.contains(e.target) && e.target !== filterBtn) {
-      filterMenu.setAttribute('hidden', '');
-    }
-  });
+    // elegir categoría -> actualiza URL y repinta
+    filterMenu.addEventListener("click", (e) => {
+      const item = e.target.closest(".menu-item");
+      if (!item) return;
+      filtrarPorCategoria(item.dataset.cat); 
+      filterMenu.setAttribute("hidden", "");
+    });
 
-  render();
+    // cerrar al click fuera
+    document.addEventListener("click", (e) => {
+      if (!filterMenu.contains(e.target) && !filterBtn.contains(e.target)) {
+        filterMenu.setAttribute("hidden", "");
+      }
+    });
+  }
 });
 
-function agregarItem(e){
+// ===== Funciones =====
+function agregarProducto(e) {
   e.preventDefault();
-  const nombreNuevo = nombre.value.trim();
-  if (!nombreNuevo) {
-    alert('Ingresá un producto');
-    nombre.focus();
+
+  const nombre   = nombreInput.value.trim();
+  const categoria = categoriaSelect.value;
+
+  if (!nombre) {
+    alert("Ingresá un producto");
     return;
   }
-  items.push({
+
+  const nuevoProducto = {
     id: Date.now(),
-    nombre: nombreNuevo,
-    categoria: cat.value
-  });
-  form.reset();
-  nombre.focus();
-  render();
+    nombre,
+    categoria,
+  };
+
+  productos.push(nuevoProducto);
+
+  guardarProductosLocal();
+  mostrarProductos();
+  formulario.reset();
+  nombreInput.focus();
 }
 
-function onListaClick(e){
-  if (!e.target.matches('.delete')) return;
-  const li = e.target.closest('[data-id]');
-  const id = Number(li.dataset.id);
-  const idx = items.findIndex(it => it.id === id);
-  if (idx !== -1) {
-    items.splice(idx, 1);
-    render();
+function mostrarProductos() {
+  const params = new URLSearchParams(window.location.search);
+  const categoriaFiltrada = params.get("categoria");
+
+  // Filtrar por categoría
+  let productosFiltrados = productos;
+  if (categoriaFiltrada) {
+    productosFiltrados = productos.filter(p => p.categoria === categoriaFiltrada);
+  }
+
+  // Mensaje de lista vacía 
+  if (productosFiltrados.length === 0) {
+    listaContainer.innerHTML = '<li class="vacio">No hay productos en tu lista</li>';
+  } else {
+    listaContainer.innerHTML = productosFiltrados.map(
+      (p) => `
+        <li class="item" data-id="${p.id}">
+          <strong>${p.nombre}</strong>
+          <span class="badge">${p.categoria}</span>
+          <button id="delete" onclick="eliminarProducto(${p.id})" type="button" class="delete">Eliminar</button>
+        </li>`
+    ).join('');
+  }
+
+  // Contador y etiqueta del botón
+  if (estado) {
+    const label = categoriaFiltrada || "Todos";
+    estado.textContent = `Mostrando: ${label} (${productosFiltrados.length})`;
+  }
+  if (filterBtn) filterBtn.textContent = (categoriaFiltrada || "Todos") + " ▾";
+}
+
+function eliminarProducto(id) {
+  productos = productos.filter(p => p.id !== id);
+  guardarProductosLocal();
+  mostrarProductos();
+}
+
+function guardarProductosLocal() {
+  localStorage.setItem("productos", JSON.stringify(productos));
+}
+
+function obtenerProductos() {
+  const guardados = localStorage.getItem("productos");
+  if (guardados) {
+    productos = JSON.parse(guardados);
   }
 }
 
-function setFiltro(cat){
-  filtroActual = cat;
-  render();
-}
+// Actualizar la URL con ?categoria=... 
+function filtrarPorCategoria(categoria) {
+  const url = new URL(window.location); // URL actual
 
-function render(){
-  const visibles = items.filter(it =>
-    filtroActual === 'Todos' ? true : it.categoria === filtroActual
-  );
+  if (categoria) {
+    url.searchParams.set("categoria", categoria);
+  } else {
+    url.searchParams.delete("categoria");
+  }
 
-  lista.innerHTML = visibles.map(it => `
-    <li class="item" data-id="${it.id}">
-      <strong>${escapeHtml(it.nombre)}</strong>
-      <span class="badge">${it.categoria}</span>
-      <button class="delete">Eliminar</button>
-    </li>
-  `).join('');
+  window.history.pushState({}, "", url); // cambiar URL sin recargar
+  mostrarProductos();
 
-  estado.textContent = `Mostrando: ${filtroActual} (${visibles.length})`;
-  vacio.hidden = visibles.length !== 0;
-}
-
-function escapeHtml(str){
-  return str.replace(/[&<>"']/g, (m)=>({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
-  }[m]));
+  // actualizar etiqueta del botón (si existe)
+  if (filterBtn) filterBtn.textContent = (categoria || "Todos") + " ▾";
 }
